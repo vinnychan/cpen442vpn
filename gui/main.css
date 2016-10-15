@@ -1,0 +1,139 @@
+html, body {
+	background-color: rgb(241, 241, 241);
+	position: relative;
+	width: 100%;
+	height: 100%;
+	margin: 0;
+}
+
+hr {
+	width: 700px;
+	border: solid 2px rgb(123, 123, 121);
+}
+
+textarea {
+	width: 100%;
+	height: 200px;
+}
+
+#client {
+	display: none;
+}
+
+.comm-buttons {
+	display: inline-block;
+	margin-top: 12px;
+}
+
+.button {
+	position: relative;
+	background-color: #555555;
+	border-radius: 0;
+	box-shadow: 0;
+	border-style: none;
+	margin-right: -5px;
+	text-align: center;
+	font-family: sans-serif;
+	color: white;
+}
+
+#main-wrapper {
+	position: relative;
+	background-color: rgb(238,232,136);
+	width: 100%;
+	height: 100%;
+}
+
+#menu {
+	position: relative;
+	background-color: rgb(133, 202, 141);
+	border-bottom: solid 5px rgb(122, 172, 126);
+	height: 50px;
+}
+
+#config-form {
+	width: 250px;
+}
+
+#changeme {
+	float: left;
+	width: 75%;
+	margin-right: 25px;
+	margin-top: 10px;
+
+}
+
+.section {
+	position: relative;
+	width: 700px;
+	height: 300px;
+	margin: 25px auto;
+}
+
+.section-form {
+	position: relative;
+	display: block;
+	border: solid 2px rgb(122, 172, 126);
+	margin: 25px auto;
+	background: rgb(133, 202, 141);
+	padding: 25px;
+
+}
+.section-form input {
+	display: block;
+	margin-bottom: 15px;
+	margin-top: 3px;
+	margin: 3px auto 15px;
+	height: 15px;
+	width: 95%;
+}
+
+.section-form label {
+	color: white;
+	background: rgb(137, 127, 122);
+	border: solid 2px rgb(123, 123, 121);
+	border-radius: 10px 10px 0 0;
+	padding: 2px 5px 2px 5px;
+	font-family: sans-serif;
+	font-weight: bold;
+	margin-left: 3px;
+}
+
+.section-title {
+	background: rgb(133, 202, 141);
+	border: solid 2px rgb(122, 172, 126);
+	width: 200px;
+	text-align: center;
+	color: white;
+	font-family: sans-serif;
+	font-weight: bold;
+	padding: 5px;
+}
+
+.tab span {
+	line-height: 40px;
+}
+
+.tab {
+	display: inline-block;
+	background-color: rgb(137, 127, 122);
+	width: 100px;
+	height: 75%;
+	font-size: 1.2em;
+	border-radius: 10px 10px 0 0;
+	border: solid 2px rgb(123, 123, 121);
+	border-bottom: none;
+	margin-left: 3px;
+	margin-top: 10px;
+}
+
+.tab:hover {
+	background-color: rgb(222, 186, 186);
+	color: rgb(137, 127, 122);
+}
+
+.tab-active {
+	box-shadow: inset 0 -7px white;
+	background-color: rgb(137, 127, 122);
+	color: white;
+}
