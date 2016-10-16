@@ -1,12 +1,13 @@
 package auth
 
 import (
+    "bytes"
     "fmt"
     "crypto/sha256"
     "crypto/aes"
     "crypto/cipher"
     "../logger"
-    // "math/rand"
+    "errors"
     "encoding/base64"
 
 )
@@ -32,6 +33,23 @@ func CreateKey(sharedKey string) {
 
 }
 
+func pad(src []byte) []byte {
+    padding := aes.BlockSize - len(src) % aes.BlockSize
+    padtext := bytes.Repeat([]byte{byte(padding)}, padding)
+    return append(src, padtext...)
+}
+
+func unpad(src []byte) ([]byte, error) {
+    length := len(src)
+    unpadding := int(src[length-1])
+
+    if unpadding > length {
+        return nil, errors.New("unpad error")
+    }
+
+    return src[:(length - unpadding)], nil
+}
+
 func encodeBase64(b []byte) string {
     return base64.StdEncoding.EncodeToString(b)
 }
@@ -45,7 +63,8 @@ func decodeBase64(s string) []byte {
 func Encrypt(message string, sessionKey string) string {
     logger.Log("-- Encrypting Message --", true)
 
-    text := []byte(message)
+    // pad string to meet min lengths
+    text := pad([]byte(message))
     key := []byte(sessionKey)
 
     block, err := aes.NewCipher(key)
@@ -64,7 +83,7 @@ func Encrypt(message string, sessionKey string) string {
 
 }
 
-func Decrypt(message string, sessionKey string) string {
+func Decrypt(message string, sessionKey string) (string, error) {
     logger.Log("-- Decrypting Message --", true)
 
     text := decodeBase64(message)
@@ -83,8 +102,13 @@ func Decrypt(message string, sessionKey string) string {
     cfb := cipher.NewCFBDecrypter(block, iv)
     cfb.XORKeyStream(text, text)
 
-    logger.Log("Plaintext: " + string(text), true)
-    return string(text)
+    plaintext, err := unpad(text)
+    if err != nil {
+        return "", err
+    }
+
+    logger.Log("Plaintext: " + string(plaintext), true)
+    return string(plaintext), nil
 }
 
 func getSessionKey() {
