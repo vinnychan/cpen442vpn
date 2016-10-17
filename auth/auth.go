@@ -9,6 +9,9 @@ import (
     "../logger"
     "errors"
     "encoding/base64"
+    "time"
+    "math/rand"
+    "strings"
 
 )
 
@@ -20,10 +23,14 @@ import (
 // - compute g^a mod p
 
 var sharedPrime float64 = 29
-var sharedBase int = 2
+var sharedBase float64 = 2
 
 var g = sharedPrime
 var p = sharedBase
+
+const NONCE_LENGTH int = 20
+const CLIENT_VERIFY_STR string = "client_string"
+const SERVER_VERIFY_STR string = "server_string"
 
 func CreateKey(sharedKey string) {
     sha256 := sha256.New()
@@ -111,18 +118,79 @@ func Decrypt(message string, sessionKey string) (string, error) {
     return string(plaintext), nil
 }
 
+func MutualAuth(isServer bool) bool {
+
+    if isServer {
+        logger.Log("-- Server waiting for client --", true)
+
+        // wait for ["client", Rachallenge]
+        // clientResponse := getMessage() <-- hardcoded for now
+        clientResponse := "client_string,randomchallengelols"
+        parts := strings.Split(clientResponse, ",")
+
+        clientString := parts[0]
+        if clientString != CLIENT_VERIFY_STR {
+            logger.Log("-- Cannot verify initial client message --", true)
+            logger.Log("-- Mutual Authentication failed --", true)
+            return false
+        }
+
+        // create server response
+        Rbchallenge := generateNonce(NONCE_LENGTH)
+        b := rand.Int()
+        gbmodp := calculategbmodp(g, float64(b), p)
+        // hardcoding shared key for now
+        encryptedResponse := Encrypt(SERVER_VERIFY_STR + "," + Rbchallenge + "," + fmt.Sprint(gbmodp), "16-character-key")
+        sendMessage(SERVER_VERIFY_STR + "," + encryptedResponse)
+
+        return true
+
+    } else {
+        logger.Log("-- Client Key Authentication --", false)
+
+        Rachallenge := generateNonce(NONCE_LENGTH)
+        // client initial contact: ["client", Rachallenge]
+        sendMessage(CLIENT_VERIFY_STR + "," + Rachallenge)
+
+        // server response: [Rbchallenge, E("server", Rachallenge, g^b mod p)]
+        // serverResponse := getMessage()
+        return true
+    }
+}
+
+// generate random string with length strlen
+func generateNonce(strlen int) string {
+    rand.Seed(time.Now().UTC().UnixNano())
+    const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
+    result := make([]byte, strlen)
+    for i := 0; i < strlen; i++ {
+        result[i] = chars[rand.Intn(len(chars))]
+    }
+    return string(result)
+}
+
 func getSessionKey() {
 
 }
 
-func getMacKey() {
+func calculategbmodp(g, b, p float64) float64 {
+    // trying to modulo and exponents in go is hard..
+    // float to bigInt types don't play well
+    // modulo'ing big ints also seems to complain
 
+    // g, b, p := big.NewInt(g), big.NewInt(b), big.NewInt(p)
+    // g.Exp(g, b, nil)
+    // return g % p
+
+    return g
+}
+
+func sendMessage(message string) {
+    // connection.send(message)
+    fmt.Println(message)
 }
 
 func getMessage() {
-
-}
-
-func sendMessage() {
-
+    // msg := connection.readLine()
+    // return msg
 }
