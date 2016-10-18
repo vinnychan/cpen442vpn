@@ -1,8 +1,10 @@
-const {app, BrowserWindow} = require('electron')
+const {app, BrowserWindow, ipcMain} = require('electron')
 
 const spawn = require('child_process').spawn;
 
 const goMain = spawn('go', ['run', '../main.go']);
+
+goMain.stdin.setEncoding('utf8');
 
 goMain.stdout.on('data', (data) => {
     console.log(`stdout: ${data}`);
@@ -16,14 +18,15 @@ goMain.on('close', (code) => {
     console.log(`child process exited with code ${code}`);
 });
 
-const ipc = require('electron').ipcMain;
-
-ipc.on('invokeAction', function(event, data){
+ipcMain.on('invokeAction', function(event, data){
       console.log(data);
-      goMain.stdin.write(data);
-      var result = processData(data);
-      event.sender.send('actionReply', result);
+      goMain.stdin.write(data.toString());
+      
+      goMain.stdin.write("\n");
+  //     var result = processData(data);
+  //  event.sender.send('actionReply', result);
 });
+
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -37,7 +40,7 @@ function createWindow () {
   win.loadURL(`file://${__dirname}/index.html`)
 
   // Open the DevTools.
-  //win.webContents.openDevTools()
+  win.webContents.openDevTools()
 
   // Emitted when the window is closed.
   win.on('closed', () => {
