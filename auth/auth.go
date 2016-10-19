@@ -12,6 +12,8 @@ import (
     "time"
     "math/rand"
     "strings"
+    "math/big"
+    "strconv"
 
 )
 
@@ -22,15 +24,25 @@ import (
 // pick a secret number a
 // - compute g^a mod p
 
-var sharedPrime float64 = 29
-var sharedBase float64 = 2
+var sharedPrime int64 = 29
+var sharedBase int64 = 17
 
 var g = sharedPrime
 var p = sharedBase
 
+var debugMode bool = false
+var isServerSide bool = false
+
 const NONCE_LENGTH int = 20
 const CLIENT_VERIFY_STR string = "client_string"
 const SERVER_VERIFY_STR string = "server_string"
+
+func Init(isDebug, isServer bool) {
+    debugMode = isDebug
+    isServerSide = isServer
+
+    // eventually have create key called here to create shared key
+}
 
 func CreateKey(sharedKey string) {
     sha256 := sha256.New()
@@ -68,7 +80,9 @@ func decodeBase64(s string) []byte {
 }
 
 func Encrypt(message string, sessionKey string) string {
-    logger.Log("-- Encrypting Message --", true)
+    if debugMode {
+        logger.Log("-- Encrypting Message --", isServerSide)
+    }
 
     // pad string to meet min lengths
     text := pad([]byte(message))
@@ -85,14 +99,17 @@ func Encrypt(message string, sessionKey string) string {
     cfb := cipher.NewCFBEncrypter(block, iv)
     cfb.XORKeyStream(ciphertext[aes.BlockSize:], text)
 
-    logger.Log("Ciphertext: " + encodeBase64(ciphertext), true)
+    if debugMode {
+        logger.Log("Ciphertext: " + encodeBase64(ciphertext), isServerSide)
+    }
     return encodeBase64(ciphertext)
 
 }
 
 func Decrypt(message string, sessionKey string) (string, error) {
-    logger.Log("-- Decrypting Message --", true)
-
+    if debugMode {
+        logger.Log("-- Decrypting Message --", isServerSide)
+    }
     text := decodeBase64(message)
     key := []byte(sessionKey)
 
@@ -113,15 +130,16 @@ func Decrypt(message string, sessionKey string) (string, error) {
     if err != nil {
         return "", err
     }
-
-    logger.Log("Plaintext: " + string(plaintext), true)
+    if debugMode {
+        logger.Log("Plaintext: " + string(plaintext), isServerSide)
+    }
     return string(plaintext), nil
 }
 
 func MutualAuth(isServer bool) bool {
 
     if isServer {
-        logger.Log("-- Server waiting for client --", true)
+        logger.Log("-- Server waiting for client --", isServerSide)
 
         // wait for ["client", Rachallenge]
         // clientResponse := getMessage() <-- hardcoded for now
@@ -130,18 +148,37 @@ func MutualAuth(isServer bool) bool {
 
         clientString := parts[0]
         if clientString != CLIENT_VERIFY_STR {
-            logger.Log("-- Cannot verify initial client message --", true)
-            logger.Log("-- Mutual Authentication failed --", true)
+            logger.Log("-- Cannot verify initial client message --", isServerSide)
+            logger.Log("-- Mutual Authentication failed --", isServerSide)
             return false
         }
 
         // create server response
         Rbchallenge := generateNonce(NONCE_LENGTH)
-        b := rand.Int()
-        gbmodp := calculategbmodp(g, float64(b), p)
+        b := rand.Intn(100)
+        b64 := int64(b)
+
+        var bigG, bigB, bigP = big.NewInt(g), big.NewInt(b64), big.NewInt(p)
+
+        gbmodp := calculategbmodp(bigG, bigB, bigP)
+        gbmodpStr := gbmodp.String()
+
+        response := SERVER_VERIFY_STR + "," + Rbchallenge + "," + gbmodpStr
+        if debugMode {
+            logger.Log("Challenge: " + Rbchallenge, isServerSide)
+            logger.Log("random b: " + strconv.Itoa(b), isServerSide)
+            logger.Log("g^b mod p: " + gbmodpStr, isServerSide)
+            logger.Log(response, isServerSide)
+        }
+
         // hardcoding shared key for now
-        encryptedResponse := Encrypt(SERVER_VERIFY_STR + "," + Rbchallenge + "," + fmt.Sprint(gbmodp), "16-character-key")
-        sendMessage(SERVER_VERIFY_STR + "," + encryptedResponse)
+        encryptedResponse := Encrypt(response, "16-character-key")
+        sendMessage(Rbchallenge + "," + encryptedResponse)
+
+        // wait for client's encrypted message: [E("client", Rbchallenge, g^a mod p)]
+        // clientResponse := getMessage()
+        // verify clientResponse is correct
+        // if correct, create session key and return true
 
         return true
 
@@ -173,16 +210,15 @@ func getSessionKey() {
 
 }
 
-func calculategbmodp(g, b, p float64) float64 {
-    // trying to modulo and exponents in go is hard..
-    // float to bigInt types don't play well
-    // modulo'ing big ints also seems to complain
+func calculategbmodp(g, b, p *big.Int) *big.Int {
+    g.Exp(g, b, nil)
+    gStr := g.String()
 
-    // g, b, p := big.NewInt(g), big.NewInt(b), big.NewInt(p)
-    // g.Exp(g, b, nil)
-    // return g % p
+    if debugMode {
+        logger.Log("g^b: " + gStr, isServerSide)
+    }
 
-    return g
+    return g.Mod(g, p)
 }
 
 func sendMessage(message string) {

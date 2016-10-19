@@ -11,6 +11,14 @@ import (
 )
 
 func main() {
+	fmt.Print("Debug mode? (y/n): ")
+	var debug string
+	var isDebug bool = false
+	var isServer bool = false
+	fmt.Scanln(&debug)
+	if debug == "y" {
+		isDebug = true
+	}
 	fmt.Print("Please type in 'client' for a client application or 'server' for a server application: \n")
 	var text string
 	fmt.Scanln(&text)
@@ -33,6 +41,9 @@ func main() {
 		fmt.Println("Starting client with host:", host, " and port:", port)
 		tcpClient.Connect(host, port)
 	} else if text == "server" {
+		isServer = true
+		auth.Init(isDebug, isServer)
+		auth.MutualAuth(isServer)
 		fmt.Println("Enter host port no.")
 		port, _ := reader.ReadString('\n')
 		port = strings.Replace(port, "\n", "", -1)
