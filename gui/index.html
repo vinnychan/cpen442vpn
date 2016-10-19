@@ -18,11 +18,11 @@
                   <div class="section-title">Client Configuration</div>
                    <form class="section-form" id="client-config-form" method="post" action="#">
                     <label for="ipaddress">Server IP Address</label>
-                    <input type="text" name="ipaddress"/>
+                    <input type="text" name="ipaddress" required/>
                     <label for="port">Port</label>
-                    <input type="text" name="port"/>
+                    <input type="text" name="port" required/>
                     <label for="secret">Secret</label>
-                    <input type="text" name="secret"/>
+                    <input type="text" name="secret" required/>
                     <input  type="submit" value="Start Client"/>
                   </form>
                 </section>
@@ -31,9 +31,9 @@
                   <section class="section-title">Client Communication</section>
                   <div class="section-form">
                     <textarea name="message">This is a test...</textarea>
-                    <input id="changeme" type="text" name="changeme"/>
-                    <button class="comm-buttons" type="button">Send</button>
-                    <button class="comm-buttons" type="button">Continue</button>
+                    <input id="client-message" type="text" name="client-message"/>
+                    <button class="comm-buttons" type="button" id="client-send-button">Send</button>
+                    <button class="comm-buttons" type="button" id="client-continue-button">Continue</button>
                   </div>
                 </section>
               </section>
@@ -42,9 +42,9 @@
                   <div class="section-title">Server Configuration</div>
                   <form class="section-form" id="server-config-form" method="post" action="#">
                     <label for="port">Port</label>
-                    <input type="text" name="port"/>
+                    <input type="text" name="port" required/>
                     <label for="secret">Secret</label>
-                    <input type="text" name="secret"/>
+                    <input type="text" name="secret" required/>
                     <input  type="submit" value="Start Server"/>
                   </form>
                 </section>
@@ -52,10 +52,10 @@
                 <section class="section">
                   <section class="section-title">Server Communication</section>
                   <div class="section-form">
-                    <textarea name="message">This is a test...</textarea>
-                    <input id="changeme" type="text" name="changeme"/>
-                    <button class="comm-buttons" type="button" id="test-button">Send</button>
-                    <button class="comm-buttons" type="button">Continue</button>
+                    <textarea name="message" id=textarea>This is a test...</textarea>
+                    <input id="server-message" type="text" name="server-message"/>
+                    <button class="comm-buttons" type="button" id="server-send-button">Send</button>
+                    <button class="comm-buttons" type="button" id="server-continue-button">Continue</button>
                   </div>
                 </section>
               </section>
