@@ -11,9 +11,9 @@ clientForm.addEventListener('submit', (evt)=>{
   console.log( ip + port + secret );
   ipcRenderer.send('clientStart', 
     {type: 'client',
-    ip: ip,
-    port: port,
-    secret: secret}
+      ip: ip,
+      port: port,
+      secret: secret}
   );
 }, false);
 
@@ -29,12 +29,35 @@ serverForm.addEventListener('submit', (evt)=>{
     {type: 'server',
       port: port,
       secret: secret}
-    );
+  );
 }, false);
 
 
-const testButton = document.getElementById('test-button');
-console.log(testButton);
-testButton.addEventListener('click', ()=>{
-  ipcRenderer.send('invokeAction', 'server');
+const clientSendButton = document.getElementById('client-send-button');
+//console.log(clientSendButton);
+clientSendButton.addEventListener('click', ()=>{
+  let message = document.getElementById('client-message').value;
+  console.log(message);
+  ipcRenderer.send('sendAction', {message:message});
 });
+const clientContinueButton = document.getElementById('client-continue-button');
+//console.log(clientContinueButton);
+clientContinueButton.addEventListener('click', ()=>{
+  ipcRenderer.send('continueAction', '');
+});
+
+const serverSendButton = document.getElementById('server-send-button');
+//console.log(serverSendButton);
+serverSendButton.addEventListener('click', ()=>{
+  let message = document.getElementById('server-message').value;
+  console.log(message);
+  ipcRenderer.send('sendAction', {message:message});
+});
+const serverContinueButton = document.getElementById('server-continue-button');
+//console.log(serverContinueButton);
+serverContinueButton.addEventListener('click', ()=>{
+  ipcRenderer.send('continueAction', '');
+});
+
+
+
