@@ -2,7 +2,7 @@ const {app, BrowserWindow, ipcMain} = require('electron')
 
 const spawn = require('child_process').spawn;
 
-const goMain = spawn('go', ['run', '../main.go']);
+const goMain = spawn('go', ['run', 'main.go']);
 
 let isServer = null;
 
