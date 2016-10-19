@@ -16,14 +16,14 @@
               <section id="client">
                 <section class="section" id="config">
                   <div class="section-title">Client Configuration</div>
-                  <form class="section-form" id="client-config-form">
+                   <form class="section-form" id="client-config-form" method="post" action="#">
                     <label for="ipaddress">Server IP Address</label>
                     <input type="text" name="ipaddress"/>
                     <label for="port">Port</label>
                     <input type="text" name="port"/>
                     <label for="secret">Secret</label>
                     <input type="text" name="secret"/>
-                    <input id='client-button' type="button" value="Start Client"/>
+                    <input  type="submit" value="Start Client"/>
                   </form>
                 </section>
                 <hr/>
@@ -40,12 +40,12 @@
               <section id="server">
                 <section class="section" id="config">
                   <div class="section-title">Server Configuration</div>
-                  <form class="section-form" id="server-config-form">
+                  <form class="section-form" id="server-config-form" method="post" action="#">
                     <label for="port">Port</label>
                     <input type="text" name="port"/>
                     <label for="secret">Secret</label>
                     <input type="text" name="secret"/>
-                    <input id='server-button' type="button" value="Start Server"/>
+                    <input  type="submit" value="Start Server"/>
                   </form>
                 </section>
                 <hr/>
