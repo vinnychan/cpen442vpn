@@ -1,4 +1,38 @@
-const {app, BrowserWindow} = require('electron')
+const {app, BrowserWindow, ipcMain} = require('electron')
+
+const spawn = require('child_process').spawn;
+
+const goMain = spawn('go', ['run', '../main.go']);
+
+goMain.stdin.setEncoding('utf8');
+
+goMain.stdout.on('data', (data) => {
+    console.log(`stdout: ${data}`);
+});
+
+goMain.stderr.on('data', (data) => {
+    console.log(`stderr: ${data}`);
+});
+
+goMain.on('close', (code) => {
+    console.log(`child process exited with code ${code}`);
+});
+
+ipcMain.on('clientStart', function(event, data){
+     // console.log(data.type + data.ip + data.port + data.secret);
+      goMain.stdin.write(data.type.toString() + "\n");
+      goMain.stdin.write(data.ip.toString() + "\n");
+      goMain.stdin.write(data.port.toString() + "\n");
+      goMain.stdin.write(data.secret.toString()+ "\n");
+});
+
+ipcMain.on('serverStart', function(event, data){
+     // console.log(data.type + data.port + data.secret);
+      goMain.stdin.write(data.type.toString() + "\n");
+      goMain.stdin.write(data.port.toString() + "\n");
+      goMain.stdin.write(data.secret.toString() + "\n");
+});
+
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -12,7 +46,7 @@ function createWindow () {
   win.loadURL(`file://${__dirname}/index.html`)
 
   // Open the DevTools.
-  //win.webContents.openDevTools()
+  win.webContents.openDevTools()
 
   // Emitted when the window is closed.
   win.on('closed', () => {

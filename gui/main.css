@@ -55,6 +55,13 @@ textarea {
 	width: 250px;
 }
 
+#server-config-form {
+	width: 250px;
+}
+
+#client-config-form {
+	width: 250px;
+}
 #changeme {
 	float: left;
 	width: 75%;

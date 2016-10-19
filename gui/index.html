@@ -1,64 +1,68 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8"/>
     <title>VPNBell - Hiding Your A** in the Grass</title>
-    <link rel="stylesheet" type="text/css" href="main.css">
+    <link rel="stylesheet" type="text/css" href="main.css"/>
     <script>window.$ = window.jQuery = require('jquery');</script>
     <script src="tabListener.js"></script>
   </head>
   <body>
     <section id="main-wrapper">
-    	<header id="menu">
-        <div class="button tab tab-active"><span>Server<span></div>
-    		<div class="button tab"><span>Client<span></div>
-    	</header>
-    	<section id="client">
-        <section class="section" id="config">
-          <div class="section-title">Client Configuration</div>
-          <form class="section-form" id="config-form">
-            <label for="ipaddress">Server IP Address</label>
-            <input type="text" name="ipaddress">
-            <label for="port">Port</label>
-            <input type="text" name="port">
-            <label for="secret">Secret</label>
-            <input type="text" name="secret">
-            <input type="submit" value="Start Client">
-          </form>
-        </section>
-        <hr>
-        <section class="section">
-          <section class="section-title">Client Communication</section>
-          <div class="section-form">
-            <textarea name="message">This is a test...</textarea>
-            <input id="changeme" type="text" name="changeme">
-            <button class="comm-buttons" type="button">Send</button>
-            <button class="comm-buttons" type="button">Continue</button>
-          </div>
-        </section>
-    	</section>
-  		<section id="server">
-        <section class="section" id="config">
-          <div class="section-title">Server Configuration</div>
-          <form class="section-form" id="config-form">
-            <label for="port">Port</label>
-            <input type="text" name="port">
-            <label for="secret">Secret</label>
-            <input type="text" name="secret">
-            <input type="submit" value="Start Server">
-          </form>
-        </section>
-        <hr>
-        <section class="section">
-          <section class="section-title">Server Communication</section>
-          <div class="section-form">
-            <textarea name="message">This is a test...</textarea>
-            <input id="changeme" type="text" name="changeme">
-            <button class="comm-buttons" type="button">Send</button>
-            <button class="comm-buttons" type="button">Continue</button>
-          </div>
-        </section>
-      </section>
-    </section>
-  </body>
-</html>
+      <header id="menu">
+        <div class="button tab tab-active"><span/>Server<span/></div>
+            <div class="button tab"><span/>Client<span/></div>
+              </header>
+              <section id="client">
+                <section class="section" id="config">
+                  <div class="section-title">Client Configuration</div>
+                   <form class="section-form" id="client-config-form" method="post" action="#">
+                    <label for="ipaddress">Server IP Address</label>
+                    <input type="text" name="ipaddress"/>
+                    <label for="port">Port</label>
+                    <input type="text" name="port"/>
+                    <label for="secret">Secret</label>
+                    <input type="text" name="secret"/>
+                    <input  type="submit" value="Start Client"/>
+                  </form>
+                </section>
+                <hr/>
+                <section class="section">
+                  <section class="section-title">Client Communication</section>
+                  <div class="section-form">
+                    <textarea name="message">This is a test...</textarea>
+                    <input id="changeme" type="text" name="changeme"/>
+                    <button class="comm-buttons" type="button">Send</button>
+                    <button class="comm-buttons" type="button">Continue</button>
+                  </div>
+                </section>
+              </section>
+              <section id="server">
+                <section class="section" id="config">
+                  <div class="section-title">Server Configuration</div>
+                  <form class="section-form" id="server-config-form" method="post" action="#">
+                    <label for="port">Port</label>
+                    <input type="text" name="port"/>
+                    <label for="secret">Secret</label>
+                    <input type="text" name="secret"/>
+                    <input  type="submit" value="Start Server"/>
+                  </form>
+                </section>
+                <hr/>
+                <section class="section">
+                  <section class="section-title">Server Communication</section>
+                  <div class="section-form">
+                    <textarea name="message">This is a test...</textarea>
+                    <input id="changeme" type="text" name="changeme"/>
+                    <button class="comm-buttons" type="button" id="test-button">Send</button>
+                    <button class="comm-buttons" type="button">Continue</button>
+                  </div>
+                </section>
+              </section>
+            </section>
+          </body>
+          <script>
+            require('./renderer.js');
+          </script>
+
+        </html>
