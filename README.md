@@ -10,4 +10,5 @@
 ## To run
 - git clone https://github.com/vinnychan/cpen442vpn.git
 - cd cpen442vpn
-- sh ./start.sh
+- chmod u+x start.sh
+- ./start.sh
