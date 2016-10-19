@@ -6,6 +6,8 @@ const goMain = spawn('go', ['run', 'main.go']);
 
 let isServer = null;
 
+let debugMode = "y";
+
 goMain.stdin.setEncoding('utf8');
 
 goMain.stdout.on('data', (data) => {
@@ -28,6 +30,7 @@ goMain.on('close', (code) => {
 
 ipcMain.on('clientStart', function(event, data){
   // console.log(data.type + data.ip + data.port + data.secret);
+  goMain.stdin.write(debugMode + "\n");
   goMain.stdin.write(data.type.toString() + "\n");
   goMain.stdin.write(data.ip.toString() + "\n");
   goMain.stdin.write(data.port.toString() + "\n");
@@ -41,6 +44,7 @@ ipcMain.on('clientStart', function(event, data){
 
 ipcMain.on('serverStart', function(event, data){
   // console.log(data.type + data.port + data.secret);
+  goMain.stdin.write(debugMode + "\n");
   goMain.stdin.write(data.type.toString() + "\n");
   goMain.stdin.write(data.port.toString() + "\n");
   goMain.stdin.write(data.secret.toString() + "\n");
@@ -50,10 +54,12 @@ ipcMain.on('serverStart', function(event, data){
     {message: reply});
   isServer = true;
 });
+
 ipcMain.on('sendAction', function(event, data){
   console.log(data);
   goMain.stdin.write(data.message.toString() + "\n");
 });
+
 ipcMain.on('continueAction', function(event, data){
   goMain.stdin.write("\n")
 });
