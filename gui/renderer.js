@@ -59,5 +59,17 @@ serverContinueButton.addEventListener('click', ()=>{
   ipcRenderer.send('continueAction', '');
 });
 
+ipcRenderer.on('clientReply', (event,data)=>{
+  let clientTextarea = document.getElementById('client-textarea');
+  let val = clientTextarea.value;
+  clientTextarea.innerHTML= val + "\n" + data.message.toString();
+  clientTextarea.scrollTop = clientTextarea.scrollHeight;
+});
 
+ipcRenderer.on('serverReply', (event,data)=>{
+  let serverTextarea = document.getElementById('server-textarea');
+  let val = serverTextarea.value;
+  serverTextarea.innerHTML= val + "\n" + data.message.toString();
+  serverTextarea.scrollTop = serverTextarea.scrollHeight;
+});
 

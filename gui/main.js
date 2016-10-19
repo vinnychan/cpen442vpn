@@ -4,10 +4,18 @@ const spawn = require('child_process').spawn;
 
 const goMain = spawn('go', ['run', '../main.go']);
 
+let isServer = null;
+
 goMain.stdin.setEncoding('utf8');
 
 goMain.stdout.on('data', (data) => {
   console.log(`stdout: ${data}`);
+  if (isServer && isServer != null) {
+    win.webContents.send('serverReply', {message: data});
+  }
+  if (!isServer && isServer != null) {
+    win.webContents.send('clientReply', {message: data});
+  }
 });
 
 goMain.stderr.on('data', (data) => {
@@ -24,6 +32,11 @@ ipcMain.on('clientStart', function(event, data){
   goMain.stdin.write(data.ip.toString() + "\n");
   goMain.stdin.write(data.port.toString() + "\n");
   goMain.stdin.write(data.secret.toString()+ "\n");
+  let reply = "Connected to server at " + data.ip.toString() + " on port " +
+    data.port.toString();
+  event.sender.send('clientReply',
+    {message: reply});
+  isServer = false;
 });
 
 ipcMain.on('serverStart', function(event, data){
@@ -31,6 +44,11 @@ ipcMain.on('serverStart', function(event, data){
   goMain.stdin.write(data.type.toString() + "\n");
   goMain.stdin.write(data.port.toString() + "\n");
   goMain.stdin.write(data.secret.toString() + "\n");
+  let reply = "Server started using port " +
+    data.port.toString();
+  event.sender.send('serverReply',
+    {message: reply});
+  isServer = true;
 });
 ipcMain.on('sendAction', function(event, data){
   console.log(data);
