@@ -79,12 +79,12 @@ ipcMain.on('serverStart', function(event, data){
     if (isServer) {
       dialog.showErrorBox("Connection Error",
         "Already started as a server. Please open another instance of the app"+
-          "to select between client or server");
+          " to select between client or server");
     }
     else {
       dialog.showErrorBox("Connection Error",
         "Already started as a client. Please open another instance of the app"+
-          "to select between client or server");
+          " to select between client or server");
     }
   }
 });
