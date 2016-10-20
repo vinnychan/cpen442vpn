@@ -1,4 +1,4 @@
-const {app, BrowserWindow, ipcMain} = require('electron')
+const {app, BrowserWindow, ipcMain, dialog} = require('electron')
 
 const spawn = require('child_process').spawn;
 
@@ -21,7 +21,13 @@ goMain.stdout.on('data', (data) => {
 });
 
 goMain.stderr.on('data', (data) => {
-  console.log(`stderr: ${data}`);
+  if (data.toString().indexOf('exit') != -1) {
+    let code = data.toString().replace(/[^0-9]/g,'');
+    console.log('EXIT: Application exited with code '+ code);
+    app.quit();
+  } else {
+    console.log(`stderr: ${data}`);
+  }
 });
 
 goMain.on('close', (code) => {
@@ -30,29 +36,57 @@ goMain.on('close', (code) => {
 
 ipcMain.on('clientStart', function(event, data){
   // console.log(data.type + data.ip + data.port + data.secret);
-  goMain.stdin.write(debugMode + "\n");
-  goMain.stdin.write(data.type.toString() + "\n");
-  goMain.stdin.write(data.ip.toString() + "\n");
-  goMain.stdin.write(data.port.toString() + "\n");
-  goMain.stdin.write(data.secret.toString()+ "\n");
-  let reply = "Connected to server at " + data.ip.toString() + " on port " +
-    data.port.toString();
-  event.sender.send('clientReply',
-    {message: reply});
-  isServer = false;
+  if (isServer == null) {
+    goMain.stdin.write(debugMode + "\n");
+    goMain.stdin.write(data.type.toString() + "\n");
+    goMain.stdin.write(data.ip.toString() + "\n");
+    goMain.stdin.write(data.port.toString() + "\n");
+    goMain.stdin.write(data.secret.toString()+ "\n");
+    let reply = "Connected to server at " + data.ip.toString() + " on port " +
+      data.port.toString();
+    event.sender.send('clientReply',
+      {message: reply});
+    isServer = false;
+  } else {
+    if (isServer) {
+      dialog.showErrorBox("Connection Error",
+        "Already started as a server. Please open another instance of the app"+
+          " to select between client or server");
+    }
+    else {
+      dialog.showErrorBox("Connection Error",
+        "Already started as a client. Please open another instance of the app"+
+          " to select between client or server");
+    }
+
+  }
+
 });
 
 ipcMain.on('serverStart', function(event, data){
   // console.log(data.type + data.port + data.secret);
-  goMain.stdin.write(debugMode + "\n");
-  goMain.stdin.write(data.type.toString() + "\n");
-  goMain.stdin.write(data.port.toString() + "\n");
-  goMain.stdin.write(data.secret.toString() + "\n");
-  let reply = "Server started using port " +
-    data.port.toString();
-  event.sender.send('serverReply',
-    {message: reply});
-  isServer = true;
+  if (isServer == null){
+    goMain.stdin.write(debugMode + "\n");
+    goMain.stdin.write(data.type.toString() + "\n");
+    goMain.stdin.write(data.port.toString() + "\n");
+    goMain.stdin.write(data.secret.toString() + "\n");
+    let reply = "Server started using port " +
+      data.port.toString();
+    event.sender.send('serverReply',
+      {message: reply});
+    isServer = true;
+  } else {
+    if (isServer) {
+      dialog.showErrorBox("Connection Error",
+        "Already started as a server. Please open another instance of the app"+
+          "to select between client or server");
+    }
+    else {
+      dialog.showErrorBox("Connection Error",
+        "Already started as a client. Please open another instance of the app"+
+          "to select between client or server");
+    }
+  }
 });
 
 ipcMain.on('sendAction', function(event, data){
