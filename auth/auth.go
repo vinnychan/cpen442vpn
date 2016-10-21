@@ -14,6 +14,7 @@ import (
     "strings"
     "math/big"
     "strconv"
+    "encoding/hex"
 
 )
 
@@ -33,23 +34,35 @@ var p = sharedBase
 var debugMode bool = false
 var isServerSide bool = false
 
+var sharedKey string = ""
+
 const NONCE_LENGTH int = 20
 const CLIENT_VERIFY_STR string = "client_string"
 const SERVER_VERIFY_STR string = "server_string"
 
-func Init(isDebug, isServer bool) {
+func Init(isDebug, isServer bool, secret string) {
     debugMode = isDebug
     isServerSide = isServer
-
-    // eventually have create key called here to create shared key
+    createKey(secret)
 }
 
-func CreateKey(sharedKey string) {
-    sha256 := sha256.New()
-    sha256.Write([]byte(sharedKey))
+func createKey(secretText string) {
+    sK := []byte(secretText)
+    shaHex := SHA256Hex(sK)
+    sharedKey = shaHex
+    fmt.Println("SHA256 key: " + shahex)
+}
+func Hex(data []byte) string {
+    return hex.EncodeToString(data)
+}
 
-    fmt.Printf("SHA256 key:\t%x", sha256.Sum(nil))
+func SHA256(data []byte) [32]byte {
+    return sha256.Sum256(data)
+}
 
+func SHA256Hex(data []byte) string {
+    bytes := SHA256(data)
+    return Hex(bytes[:16])
 }
 
 func pad(src []byte) []byte {
@@ -172,7 +185,7 @@ func MutualAuth(isServer bool) bool {
         }
 
         // hardcoding shared key for now
-        encryptedResponse := Encrypt(response, "16-character-key")
+        encryptedResponse := Encrypt(response, sharedKey)
         sendMessage(Rbchallenge + "," + encryptedResponse)
 
         // wait for client's encrypted message: [E("client", Rbchallenge, g^a mod p)]

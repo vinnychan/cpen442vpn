@@ -42,18 +42,17 @@ func main() {
 		tcpClient.Connect(host, port)
 	} else if text == "server" {
 		isServer = true
-		auth.Init(isDebug, isServer)
-		auth.MutualAuth(isServer)
 		fmt.Println("Enter host port no.")
 		port, _ := reader.ReadString('\n')
 		port = strings.Replace(port, "\n", "", -1)
 		fmt.Println("Enter key to use")
 		key, _ = reader.ReadString('\n')
 		key = strings.Replace(key, "\n", "", -1)
-		auth.CreateKey(key)
+		auth.Init(isDebug, isServer, key)
 		ct := auth.Encrypt("test", "16-character-key")
 		auth.Decrypt(ct, "16-character-key")
 		fmt.Println("Starting server with port:", port)
+		auth.MutualAuth(isServer)
 		fmt.Scanln(port)
 		tcpServer.Connect(port)
 	}
