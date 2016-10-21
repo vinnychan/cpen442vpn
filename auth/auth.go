@@ -35,6 +35,7 @@ var debugMode bool = false
 var isServerSide bool = false
 
 var sharedKey string = ""
+var sessionKey string = ""
 
 const NONCE_LENGTH int = 20
 const CLIENT_VERIFY_STR string = "client_string"
@@ -43,14 +44,14 @@ const SERVER_VERIFY_STR string = "server_string"
 func Init(isDebug, isServer bool, secret string) {
     debugMode = isDebug
     isServerSide = isServer
-    createKey(secret)
+    sharedKey = createKey(secret)
 }
 
-func createKey(secretText string) {
+func createKey(secretText string) string {
     sK := []byte(secretText)
     shaHex := SHA256Hex(sK)
-    sharedKey = shaHex
     fmt.Println("SHA256 key: " + shaHex)
+    return shaHex
 }
 func Hex(data []byte) string {
     return hex.EncodeToString(data)
@@ -92,14 +93,14 @@ func decodeBase64(s string) []byte {
     return data
 }
 
-func Encrypt(message string, sessionKey string) string {
+func Encrypt(message string, eKey string) string {
     if debugMode {
         logger.Log("-- Encrypting Message --", isServerSide)
     }
 
     // pad string to meet min lengths
     text := pad([]byte(message))
-    key := []byte(sessionKey)
+    key := []byte(eKey)
 
     block, err := aes.NewCipher(key)
     if err != nil {
@@ -119,12 +120,12 @@ func Encrypt(message string, sessionKey string) string {
 
 }
 
-func Decrypt(message string, sessionKey string) (string, error) {
+func Decrypt(message string, dKey string) (string, error) {
     if debugMode {
         logger.Log("-- Decrypting Message --", isServerSide)
     }
     text := decodeBase64(message)
-    key := []byte(sessionKey)
+    key := []byte(dKey)
 
     block, err := aes.NewCipher(key)
     if err != nil {
@@ -184,7 +185,6 @@ func MutualAuth(isServer bool) bool {
             logger.Log(response, isServerSide)
         }
 
-        // hardcoding shared key for now
         encryptedResponse := Encrypt(response, sharedKey)
         sendMessage(Rbchallenge + "," + encryptedResponse)
 
@@ -192,11 +192,37 @@ func MutualAuth(isServer bool) bool {
         // clientResponse := getMessage()
         // verify clientResponse is correct
         // if correct, create session key and return true
+        clientResTest := Encrypt(CLIENT_VERIFY_STR + "," + Rbchallenge + "," + gbmodpStr, sharedKey)
+        clientPTres, err := Decrypt(clientResTest, sharedKey)
+        if err != nil {
+            panic(err)
+            return false
+        }
+        clientParts := strings.Split(clientPTres, ",")
+
+        if clientParts[0] != CLIENT_VERIFY_STR && clientParts[1] != Rbchallenge {
+            logger.Log("-- Cannot verify initial client message --", isServerSide)
+            logger.Log("-- Mutual Authentication failed --", isServerSide)
+            return false
+        }
+
+        // create session key
+        gamodpStr := clientParts[2]
+        gamodp, err := strconv.Atoi(gamodpStr)
+        gamodp64 := int64(gamodp)
+        if err != nil {
+            panic(err)
+            return false
+        }
+        var biggamodp = big.NewInt(gamodp64)
+        gabmodp := calculategbmodp(biggamodp, bigB, bigP)
+        gabmodpStr := gabmodp.String()
+        sessionKey = createKey(gabmodpStr)
 
         return true
 
     } else {
-        logger.Log("-- Client Key Authentication --", false)
+        logger.Log("-- Client Key Authentication --", isServer)
 
         Rachallenge := generateNonce(NONCE_LENGTH)
         // client initial contact: ["client", Rachallenge]
@@ -224,11 +250,16 @@ func getSessionKey() {
 }
 
 func calculategbmodp(g, b, p *big.Int) *big.Int {
-    g.Exp(g, b, nil)
-    gStr := g.String()
 
+    gStr := g.String()
+    g.Exp(g, b, nil)
+    gExpStr := g.String()
+    bStr := b.String()
     if debugMode {
-        logger.Log("g^b: " + gStr, isServerSide)
+        logger.Log("-- Calculating g^exp mod p --", isServerSide)
+        logger.Log("g = " + gStr, isServerSide)
+        logger.Log("exp = " + bStr, isServerSide)
+        logger.Log("g^exp: " + gExpStr, isServerSide)
     }
 
     return g.Mod(g, p)
@@ -236,7 +267,7 @@ func calculategbmodp(g, b, p *big.Int) *big.Int {
 
 func sendMessage(message string) {
     // connection.send(message)
-    fmt.Println(message)
+    logger.Log("Sending: " + message, isServerSide)
 }
 
 func getMessage() {
