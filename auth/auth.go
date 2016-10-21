@@ -50,7 +50,7 @@ func createKey(secretText string) {
     sK := []byte(secretText)
     shaHex := SHA256Hex(sK)
     sharedKey = shaHex
-    fmt.Println("SHA256 key: " + shahex)
+    fmt.Println("SHA256 key: " + shaHex)
 }
 func Hex(data []byte) string {
     return hex.EncodeToString(data)
