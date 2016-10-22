@@ -82,6 +82,7 @@ ipcMain.on('serverStart', function(event, data){
   // console.log(data.type + data.port + data.secret);
   if (isServer == null){
     if (data.debugMode == true) {
+      console.log("debug on");
       debugMode = "y";
     } else {
       debugMode = "n";

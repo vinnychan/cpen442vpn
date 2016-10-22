@@ -8,7 +8,7 @@ clientForm.addEventListener('submit', (evt)=>{
   let ip = clientForm.elements['ipaddress'].value;
   let port = clientForm.elements['port'].value;
   let secret = clientForm.elements['secret'].value;
-  let debugMode = clientForm.elements['debug'].value;
+  let debugMode = clientForm.elements['debug'][0].checked;
   //console.log( ip + port + secret );
   ipcRenderer.send('clientStart', 
     {type: 'client',
@@ -26,7 +26,7 @@ serverForm.addEventListener('submit', (evt)=>{
   evt.preventDefault();
   let port = serverForm.elements['port'].value;
   let secret = serverForm.elements['secret'].value;
-  let debugMode = serverForm.elements['debug'].value;
+ let debugMode = serverForm.elements['debug'][0].checked;
 
   ipcRenderer.send('serverStart',
     {type: 'server',
