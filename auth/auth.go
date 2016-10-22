@@ -138,6 +138,7 @@ func Decrypt(message string, dKey string) (string, error) {
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
+		fmt.Println("DECRYPT AES CIPHER ERR")
 		panic(err)
 	}
 
@@ -151,6 +152,7 @@ func Decrypt(message string, dKey string) (string, error) {
 
 	plaintext, err := unpad(text)
 	if err != nil {
+		fmt.Println("DECRYPT PADD ERR")
 		return "", err
 	}
 	if debugMode {
@@ -220,6 +222,7 @@ func MutualAuth() (final bool, conn net.Conn) {
 		// clientResTest := Encrypt(CLIENT_VERIFY_STR+","+Rbchallenge+","+gbmodpStr, sharedKey)
 		clientPTres, err := Decrypt(clientResponse, sharedKey)
 		if err != nil {
+			fmt.Println("PANICKING SERVER")
 			panic(err)
 			final = false
 			return final, nil
@@ -258,9 +261,12 @@ func MutualAuth() (final bool, conn net.Conn) {
 		// client initial contact: ["client", Rachallenge]
 		sendMessage(CLIENT_VERIFY_STR+","+Rachallenge, conn)
 		serverResponse := getMessage(conn)
+
 		serverParts := strings.Split(serverResponse, ",")
-		serverPTres, err := Decrypt(serverParts[2], sharedKey)
+
+		serverPTres, err := Decrypt(serverParts[1], sharedKey)
 		if err != nil {
+			fmt.Println("PANICKING CLIENT")
 			panic(err)
 
 			conn.Close()
@@ -350,13 +356,22 @@ func sendMessageInit() (conn net.Conn) {
 func sendMessage(message string, conn net.Conn) {
 	// connection.send(message)
 	logger.Log("Sending: "+message, isServerSide)
-	_, err := conn.Write([]byte(message))
-	CheckError(err)
+	fmt.Fprintf(conn, message+"\n")
+
+	// CheckError(err)
+	fmt.Println("sent")
 }
 
 func getMessage(conn net.Conn) (response string) {
+	response = " "
+	// resp := make([]byte, 1024)
+	// conn.SetReadDeadline(time.Now().Add(time.Second * 10))
+	fmt.Println("reading")
 	response, err := bufio.NewReader(conn).ReadString('\n')
 	CheckError(err)
+	fmt.Println("read", response, "sentence")
+
+	// CheckError(err)
 	return
 }
 
