@@ -144,14 +144,12 @@ func CheckError(err error) {
 }
 
 func MutualAuth() (final bool, conn net.Conn) {
-	// fmt.Println("Launching server... on port", port)
 	final = false
-	// conn = nil
+    logger.Log("-- Begin Mutual Authentication --", isServerSide)
 	if isServerSide {
 		// wait for ["client", Rachallenge]
 		conn := getMessageInit()
 		clientResponse := getMessage(conn)
-		// clientResponse := "client_string,randomchallengelols"
 		parts := strings.Split(clientResponse, ",")
 		clientString := parts[0]
 		Rachallenge := parts[1]
@@ -177,25 +175,21 @@ func MutualAuth() (final bool, conn net.Conn) {
 
 		response := SERVER_VERIFY_STR + "," + Rachallenge + "," + gbmodpStr
 		if debugMode {
-			logger.Log("Challenge: "+Rbchallenge, isServerSide)
+			logger.Log("Challenge to send: "+Rbchallenge, isServerSide)
 			logger.Log("random b: "+strconv.Itoa(b), isServerSide)
 			logger.Log("g^b mod p: "+gbmodpStr, isServerSide)
-			logger.Log(response, isServerSide)
+			logger.Log("Plaintext to send: " + response, isServerSide)
 		}
 
 		encryptedResponse := Encrypt(response, sharedKey)
-
 		sendMessage(Rbchallenge+","+encryptedResponse, conn)
 
 		// wait for client's encrypted message: [E("client", Rbchallenge, g^a mod p)]
-		// clientResponse := getMessage()
 		// verify clientResponse is correct
 		// if correct, create session key and return true
 		clientResponse = getMessage(conn)
-		// clientResTest := Encrypt(CLIENT_VERIFY_STR+","+Rbchallenge+","+gbmodpStr, sharedKey)
 		clientPTres, err := Decrypt(clientResponse, sharedKey)
 		if err != nil {
-			fmt.Println("PANICKING SERVER")
 			panic(err)
 			final = false
 			return final, nil
@@ -211,7 +205,7 @@ func MutualAuth() (final bool, conn net.Conn) {
 
 		// create session key
 		gamodpStr := clientParts[2]
-        logger.Log("Client sent g^a mod p:" + gamodpStr, isServerSide)
+
 		gamodp, err := strconv.Atoi(gamodpStr)
 		gamodp64 := int64(gamodp)
 		if err != nil {
@@ -220,10 +214,16 @@ func MutualAuth() (final bool, conn net.Conn) {
 			return final, nil
 		}
 		var biggamodp = big.NewInt(gamodp64)
+        if debugMode {
+            logger.Log("Client sent g^a mod p:" + gamodpStr, isServerSide)
+            logger.Log("Using g^a mod p to create key", isServerSide)
+        }
 		gabmodp := calculategbmodp(biggamodp, bigB, bigP)
 		gabmodpStr := gabmodp.String()
-        logger.Log("g^ab mod p: " + gabmodpStr, isServerSide)
 		sessionKey = createKey(gabmodpStr)
+        if debugMode {
+            logger.Log("Creating session key: " + sessionKey, isServerSide)
+        }
 		final = true
 		return final, conn
 
@@ -233,14 +233,19 @@ func MutualAuth() (final bool, conn net.Conn) {
 		Rachallenge := generateNonce(NONCE_LENGTH)
 		conn := sendMessageInit()
 		// client initial contact: ["client", Rachallenge]
-		sendMessage(CLIENT_VERIFY_STR+","+Rachallenge, conn)
+        initialMsg := CLIENT_VERIFY_STR+ ","+ Rachallenge
+        if debugMode {
+            logger.Log("Creating challenge/nonce: " + Rachallenge, isServerSide)
+            logger.Log("Sending initial contact to server: " + initialMsg, isServerSide)
+        }
+		sendMessage(initialMsg, conn)
+        // server response: [Rbchallenge, E("server", Rachallenge, g^b mod p)]
 		serverResponse := getMessage(conn)
 
 		serverParts := strings.Split(serverResponse, ",")
 
 		serverPTres, err := Decrypt(serverParts[1], sharedKey)
 		if err != nil {
-			fmt.Println("PANICKING CLIENT")
 			panic(err)
 
 			conn.Close()
@@ -266,27 +271,31 @@ func MutualAuth() (final bool, conn net.Conn) {
 			var calcMod, bigG, bigA, bigP = big.NewInt(gbmodp64), big.NewInt(g), big.NewInt(a64), big.NewInt(p)
             gamodp := calculategbmodp(bigG, bigA, bigP)
             gamodpStr := gamodp.String()
-			gabmodp := calculategbmodp(calcMod, bigA, bigP)
-			gabmodpStr := gabmodp.String()
+
 
 			response := CLIENT_VERIFY_STR + "," + Rachallenge + "," + gamodpStr
 			if debugMode {
-				logger.Log("Challenge: "+Rachallenge, isServerSide)
+				logger.Log("Challenge to send: "+Rachallenge, isServerSide)
 				logger.Log("random a: "+strconv.Itoa(a), isServerSide)
-				logger.Log("g^ab mod p: "+gabmodpStr, isServerSide)
-				logger.Log(response, isServerSide)
+                logger.Log("g^a mod p to send: " + gamodpStr, isServerSide)
+				logger.Log("Plaintext to send: " + response, isServerSide)
 			}
 
 			encryptedResponse := Encrypt(response, sharedKey)
 			sendMessage(encryptedResponse, conn)
 
+            // create session key
+            gabmodp := calculategbmodp(calcMod, bigA, bigP)
+            gabmodpStr := gabmodp.String()
+
+            if debugMode {
+                logger.Log("Creating session key: " + gabmodpStr, isServerSide)
+            }
+
 			sessionKey = createKey(gabmodpStr)
 			final = true
 			return final, conn
 		}
-
-		// server response: [Rbchallenge, E("server", Rachallenge, g^b mod p)]
-		// serverResponse := getMessage()
 		final = true
 		return final, conn
 	}
@@ -331,24 +340,21 @@ func sendMessageInit() (conn net.Conn) {
 }
 
 func sendMessage(message string, conn net.Conn) {
-	// connection.send(message)
-	logger.Log("Sending: "+message, isServerSide)
+    if debugMode {
+        logger.Log("Sending: "+message, isServerSide)
+    }
+
 	fmt.Fprintf(conn, message+"\n")
 
-	// CheckError(err)
-	fmt.Println("sent")
 }
 
 func getMessage(conn net.Conn) (response string) {
 	response = " "
-	// resp := make([]byte, 1024)
-	// conn.SetReadDeadline(time.Now().Add(time.Second * 10))
-	// fmt.Println("reading")
 	response, err := bufio.NewReader(conn).ReadString('\n')
 	CheckError(err)
-	// fmt.Println("read", response, "sentence")
-
-	// CheckError(err)
+    if debugMode {
+        logger.Log("Receiving: " + response, isServerSide)
+    }
 	return
 }
 

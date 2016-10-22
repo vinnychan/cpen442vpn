@@ -47,8 +47,6 @@ func authenticateServer(isDebug bool, isServer bool, host string, port string, k
 
 func authenticateClient(isDebug bool, isServer bool, host string, port string, key string) {
 	auth.Init(isDebug, host, isServer, port, key)
-	ct := auth.Encrypt("test", "16-character-key")
-	auth.Decrypt(ct, "16-character-key")
 	fmt.Println("Starting server with port:", port)
 	test, conn := auth.MutualAuth()
 	if test {
