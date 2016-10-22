@@ -326,8 +326,8 @@ func generateNonce(strlen int) string {
 	return string(result)
 }
 
-func getSessionKey() {
-
+func GetSessionKey() string {
+	return sessionKey
 }
 
 func calculategbmodp(g, b, p *big.Int) *big.Int {
@@ -366,10 +366,10 @@ func getMessage(conn net.Conn) (response string) {
 	response = " "
 	// resp := make([]byte, 1024)
 	// conn.SetReadDeadline(time.Now().Add(time.Second * 10))
-	fmt.Println("reading")
+	// fmt.Println("reading")
 	response, err := bufio.NewReader(conn).ReadString('\n')
 	CheckError(err)
-	fmt.Println("read", response, "sentence")
+	// fmt.Println("read", response, "sentence")
 
 	// CheckError(err)
 	return
