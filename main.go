@@ -47,6 +47,7 @@ func authenticateClient(isDebug bool, isServer bool, host string, port string, k
 	fmt.Println("Starting server with port:", port)
 	test, conn := auth.MutualAuth()
 	if test {
+		fmt.Print("Waiting for client message: ")
 		reader := bufio.NewReader(os.Stdin)
 		go tcpServer.MessageReceiver(conn)
 		for {
