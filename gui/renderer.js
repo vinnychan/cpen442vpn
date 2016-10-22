@@ -8,9 +8,11 @@ clientForm.addEventListener('submit', (evt)=>{
   let ip = clientForm.elements['ipaddress'].value;
   let port = clientForm.elements['port'].value;
   let secret = clientForm.elements['secret'].value;
-  console.log( ip + port + secret );
+  let debugMode = clientForm.elements['debug'].value;
+  //console.log( ip + port + secret );
   ipcRenderer.send('clientStart', 
     {type: 'client',
+      debugMode: debugMode,
       ip: ip,
       port: port,
       secret: secret}
@@ -24,9 +26,11 @@ serverForm.addEventListener('submit', (evt)=>{
   evt.preventDefault();
   let port = serverForm.elements['port'].value;
   let secret = serverForm.elements['secret'].value;
+  let debugMode = serverForm.elements['debug'].value;
 
   ipcRenderer.send('serverStart',
     {type: 'server',
+      debugMode: debugMode,
       port: port,
       secret: secret}
   );
