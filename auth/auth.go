@@ -112,6 +112,7 @@ func Encrypt(message string, eKey string) string {
 func Decrypt(message string, dKey string) (string, error) {
 	if debugMode {
 		logger.Log("-- Decrypting Message --", isServerSide)
+        logger.Log("Decrypting: " + message, isServerSide)
 	}
 	text := decodeBase64(message)
 	key := []byte(dKey)

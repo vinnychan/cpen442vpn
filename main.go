@@ -17,14 +17,18 @@ func CheckError(err error) {
 		os.Exit(1)
 	}
 }
-func messageReceiver(conn net.Conn) {
+func messageReceiver(conn net.Conn, isServer bool) {
 	sessionKey := auth.GetSessionKey()
 	for {
 		message, err := bufio.NewReader(conn).ReadString('\n')
 		CheckError(err)
 		msg, err := auth.Decrypt(message, sessionKey)
 		CheckError(err)
-		fmt.Print("RCVDMSG: ", msg)
+		if isServer {
+			fmt.Print("[CLIENT] > ", msg)
+		} else {
+			fmt.Print("[SERVER] > ", msg)
+		}
 	}
 }
 
@@ -35,9 +39,10 @@ func authenticateServer(isDebug bool, isServer bool, host string, port string, k
 	if test {
 		sessionKey := auth.GetSessionKey()
 		reader := bufio.NewReader(os.Stdin)
-		go messageReceiver(conn)
+		go messageReceiver(conn, isServer)
 		for {
 			text, _ := reader.ReadString('\n')
+			fmt.Println("[Client] >", text)
 			text = auth.Encrypt(text, sessionKey)
 			conn.Write([]byte(text + "\n"))
 		}
@@ -51,11 +56,12 @@ func authenticateClient(isDebug bool, isServer bool, host string, port string, k
 	test, conn := auth.MutualAuth()
 	if test {
 		sessionKey := auth.GetSessionKey()
-		fmt.Print("Waiting for client message: ")
+		fmt.Println("Waiting for client message: ")
 		reader := bufio.NewReader(os.Stdin)
-		go messageReceiver(conn)
+		go messageReceiver(conn, isServer)
 		for {
 			text, _ := reader.ReadString('\n')
+			fmt.Println("[Server] >", text)
 			text = auth.Encrypt(text, sessionKey)
 			conn.Write([]byte(text + "\n"))
 		}
