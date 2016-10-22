@@ -110,6 +110,8 @@ textarea {
 	background: rgb(133, 202, 141);
 	border: solid 2px rgb(122, 172, 126);
 	width: 200px;
+  margin-top: 75px;
+  position: relative;
 	text-align: center;
 	color: white;
 	font-family: sans-serif;
