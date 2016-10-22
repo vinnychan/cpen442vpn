@@ -15,7 +15,7 @@ func CheckError(err error) {
 	}
 }
 
-func messageReceiver(conn net.Conn) {
+func MessageReceiver(conn net.Conn) {
 	for {
 		message, err := bufio.NewReader(conn).ReadString('\n')
 		CheckError(err)
@@ -33,7 +33,7 @@ func Connect(port string) {
 	// accept connection on port
 	conn, err := ln.Accept()
 	CheckError(err)
-	go messageReceiver(conn)
+	go MessageReceiver(conn)
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		text, _ := reader.ReadString('\n')
