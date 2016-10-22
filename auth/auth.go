@@ -3,13 +3,11 @@ package auth
 import (
 	"../logger"
 	"bufio"
-	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"math/big"
 	"math/rand"
@@ -73,23 +71,6 @@ func SHA256Hex(data []byte) string {
 	return Hex(bytes[:16])
 }
 
-func pad(src []byte) []byte {
-	padding := aes.BlockSize - len(src)%aes.BlockSize
-	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
-	return append(src, padtext...)
-}
-
-func unpad(src []byte) ([]byte, error) {
-	length := len(src)
-	unpadding := int(src[length-1])
-
-	if unpadding > length {
-		return nil, errors.New("unpad error")
-	}
-
-	return src[:(length - unpadding)], nil
-}
-
 func encodeBase64(b []byte) string {
 	return base64.StdEncoding.EncodeToString(b)
 }
@@ -107,8 +88,7 @@ func Encrypt(message string, eKey string) string {
 		logger.Log("-- Encrypting Message --", isServerSide)
 	}
 
-	// pad string to meet min lengths
-	text := pad([]byte(message))
+	text := []byte(message)
 	key := []byte(eKey)
 
 	block, err := aes.NewCipher(key)
@@ -150,15 +130,10 @@ func Decrypt(message string, dKey string) (string, error) {
 	cfb := cipher.NewCFBDecrypter(block, iv)
 	cfb.XORKeyStream(text, text)
 
-	plaintext, err := unpad(text)
-	if err != nil {
-		fmt.Println("DECRYPT PADD ERR")
-		return "", err
-	}
 	if debugMode {
-		logger.Log("Plaintext: "+string(plaintext), isServerSide)
+		logger.Log("Plaintext: "+string(text), isServerSide)
 	}
-	return string(plaintext), nil
+	return string(text), nil
 }
 
 func CheckError(err error) {
@@ -173,11 +148,9 @@ func MutualAuth() (final bool, conn net.Conn) {
 	final = false
 	// conn = nil
 	if isServerSide {
-		fmt.Println("SERVER")
 		// wait for ["client", Rachallenge]
 		conn := getMessageInit()
 		clientResponse := getMessage(conn)
-		fmt.Println("client -->", clientResponse)
 		// clientResponse := "client_string,randomchallengelols"
 		parts := strings.Split(clientResponse, ",")
 		clientString := parts[0]
@@ -238,6 +211,7 @@ func MutualAuth() (final bool, conn net.Conn) {
 
 		// create session key
 		gamodpStr := clientParts[2]
+        logger.Log("Client sent g^a mod p:" + gamodpStr, isServerSide)
 		gamodp, err := strconv.Atoi(gamodpStr)
 		gamodp64 := int64(gamodp)
 		if err != nil {
@@ -248,12 +222,12 @@ func MutualAuth() (final bool, conn net.Conn) {
 		var biggamodp = big.NewInt(gamodp64)
 		gabmodp := calculategbmodp(biggamodp, bigB, bigP)
 		gabmodpStr := gabmodp.String()
+        logger.Log("g^ab mod p: " + gabmodpStr, isServerSide)
 		sessionKey = createKey(gabmodpStr)
 		final = true
 		return final, conn
 
 	} else {
-		fmt.Println("Client")
 		logger.Log("-- Client Key Authentication --", isServerSide)
 
 		Rachallenge := generateNonce(NONCE_LENGTH)
@@ -281,18 +255,21 @@ func MutualAuth() (final bool, conn net.Conn) {
 			return false, nil
 
 		} else {
+            gbmodpStr := serverParts[2]
+            logger.Log("Server sent g^b mod p:" + gbmodpStr, isServerSide)
 			gbmodp, err := strconv.Atoi(serverParts[2])
 			CheckError(err)
 			gbmodp64 := int64(gbmodp)
 			a := rand.Intn(100)
 			a64 := int64(a)
 
-			var calcMod, bigA, bigP = big.NewInt(gbmodp64), big.NewInt(a64), big.NewInt(p)
-
+			var calcMod, bigG, bigA, bigP = big.NewInt(gbmodp64), big.NewInt(g), big.NewInt(a64), big.NewInt(p)
+            gamodp := calculategbmodp(bigG, bigA, bigP)
+            gamodpStr := gamodp.String()
 			gabmodp := calculategbmodp(calcMod, bigA, bigP)
 			gabmodpStr := gabmodp.String()
 
-			response := CLIENT_VERIFY_STR + "," + Rachallenge + "," + gabmodpStr
+			response := CLIENT_VERIFY_STR + "," + Rachallenge + "," + gamodpStr
 			if debugMode {
 				logger.Log("Challenge: "+Rachallenge, isServerSide)
 				logger.Log("random a: "+strconv.Itoa(a), isServerSide)
