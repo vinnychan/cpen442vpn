@@ -42,7 +42,7 @@ func authenticateServer(isDebug bool, isServer bool, host string, port string, k
 		go messageReceiver(conn, isServer)
 		for {
 			text, _ := reader.ReadString('\n')
-			fmt.Println("[Client] >", text)
+			fmt.Println("[CLIENT] >", text)
 			text = auth.Encrypt(text, sessionKey)
 			conn.Write([]byte(text + "\n"))
 		}
@@ -61,7 +61,7 @@ func authenticateClient(isDebug bool, isServer bool, host string, port string, k
 		go messageReceiver(conn, isServer)
 		for {
 			text, _ := reader.ReadString('\n')
-			fmt.Println("[Server] >", text)
+			fmt.Println("[SERVER] >", text)
 			text = auth.Encrypt(text, sessionKey)
 			conn.Write([]byte(text + "\n"))
 		}

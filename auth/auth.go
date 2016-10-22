@@ -55,7 +55,9 @@ func Init(isDebug bool, host string, isServer bool, port string, secret string) 
 func createKey(secretText string) string {
 	sK := []byte(secretText)
 	shaHex := SHA256Hex(sK)
-	fmt.Println("SHA256 key: " + shaHex)
+    if debugMode {
+	   fmt.Println("SHA256 key: " + shaHex)
+    }
 	return shaHex
 }
 func Hex(data []byte) string {
@@ -262,7 +264,9 @@ func MutualAuth() (final bool, conn net.Conn) {
 
 		} else {
             gbmodpStr := serverParts[2]
-            logger.Log("Server sent g^b mod p:" + gbmodpStr, isServerSide)
+            if debugMode {
+                logger.Log("Server sent g^b mod p:" + gbmodpStr, isServerSide)
+            }
 			gbmodp, err := strconv.Atoi(serverParts[2])
 			CheckError(err)
 			gbmodp64 := int64(gbmodp)
