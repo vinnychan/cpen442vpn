@@ -3,10 +3,10 @@ package main
 import (
 	"./auth"
 	// "./tcpClient"
-	"./tcpServer"
+	// "./tcpServer"
 	"bufio"
 	"fmt"
-	// "net"
+	"net"
 	"os"
 	"strings"
 )
@@ -17,24 +17,29 @@ func CheckError(err error) {
 		os.Exit(1)
 	}
 }
+func messageReceiver(conn net.Conn) {
+	sessionKey := auth.GetSessionKey()
+	for {
+		message, err := bufio.NewReader(conn).ReadString('\n')
+		CheckError(err)
+		msg, err := auth.Decrypt(message, sessionKey)
+		CheckError(err)
+		fmt.Print("RCVDMSG: ", msg)
+	}
+}
 
 func authenticateServer(isDebug bool, isServer bool, host string, port string, key string) {
 	// auth.Init(isDebug, false, key)
 	auth.Init(isDebug, host, false, port, key)
 	test, conn := auth.MutualAuth()
 	if test {
+		sessionKey := auth.GetSessionKey()
+		reader := bufio.NewReader(os.Stdin)
+		go messageReceiver(conn)
 		for {
-			// read in input from stdin
-			reader := bufio.NewReader(os.Stdin)
-			fmt.Print("Text to send: ")
-			text, err := reader.ReadString('\n')
-			CheckError(err)
-			// send to socket
-			fmt.Fprintf(conn, text+"\n")
-			// listen for reply
-			message, err := bufio.NewReader(conn).ReadString('\n')
-			CheckError(err)
-			fmt.Print("Message from server: " + message)
+			text, _ := reader.ReadString('\n')
+			text = auth.Encrypt(text, sessionKey)
+			conn.Write([]byte(text + "\n"))
 		}
 	}
 
@@ -47,11 +52,13 @@ func authenticateClient(isDebug bool, isServer bool, host string, port string, k
 	fmt.Println("Starting server with port:", port)
 	test, conn := auth.MutualAuth()
 	if test {
+		sessionKey := auth.GetSessionKey()
 		fmt.Print("Waiting for client message: ")
 		reader := bufio.NewReader(os.Stdin)
-		go tcpServer.MessageReceiver(conn)
+		go messageReceiver(conn)
 		for {
 			text, _ := reader.ReadString('\n')
+			text = auth.Encrypt(text, sessionKey)
 			conn.Write([]byte(text + "\n"))
 		}
 	}
